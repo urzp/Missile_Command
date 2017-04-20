@@ -14,10 +14,11 @@ missle_command.init = function(){
         this.ctx.fillStyle = "#000"; 
         this.ctx.fillRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT); 
         missle_command.Base.init();
-        missle_command.Base.draw();
+        missle_command.Enimy.init();
 }
-
-missle_command.Base = {};
+missle_command.draw = function(){
+    missle_command.Base.draw();
+}
 missle_command.constructors ={}
 missle_command.constructors.start_point = function(position){
     this.position = position;
@@ -27,6 +28,11 @@ missle_command.constructors.sub_point = function(position){
     this.position = position;
     this.active = true;
 }
+missle_command.constructors.rockets = function(){
+    this.active = false;
+}
+
+missle_command.Base = {};
 missle_command.Base.init = function(){
     this.start_points =[];
     this.start_points.push(new missle_command.constructors.start_point("left"));
@@ -72,15 +78,28 @@ missle_command.Base.draw = function(){
 }
 
 missle_command.Enimy = {};
+missle_command.Enimy.init = function(){
+    this.rockets = [];
+    this.max_rockets = 10;
+    for(var i = 0; i<20; i++){
+        this.rockets.push(new missle_command.constructors.rockets());
+    }
+    
+}
+missle_command.Enimy.start_rocket = function(){
+    
+}
+
+
 
 missle_command.start = setInterval(function() {
   //update();
-  //draw();
+  missle_command.draw();
 }, 1000/missle_command.FPS);
 
 $(document).ready(function(){
     missle_command.init();
-    //missle_command.start();
+    missle_command.start();
 })
 
 
