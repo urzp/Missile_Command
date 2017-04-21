@@ -16,8 +16,13 @@ missle_command.init = function(){
         missle_command.Base.init();
         missle_command.Enimy.init();
 }
+missle_command.update = function(){
+    missle_command.Enimy.start_rocket();
+    missle_command.Enimy.update();
+}
 missle_command.draw = function(){
     missle_command.Base.draw();
+    missle_command.Enimy.draw();
 }
 missle_command.constructors ={}
 missle_command.constructors.start_point = function(position){
@@ -87,15 +92,68 @@ missle_command.Enimy.init = function(){
     
 }
 missle_command.Enimy.start_rocket = function(){
+   
+    var count_active = 0;
+    var next_rocet = null;
+    var rocket_count = this.rockets.length;
+    for (var index = 0; (next_rocet == null && index < rocket_count ); index++ ){
+       if (this.rockets[index].active==true){
+            count_active++;
+        } else {
+           next_rocet = index;   
+        }
+    }
     
+    if (count_active <= this.max_rockets){
+        this.rockets[next_rocet].active = true;
+        var x_pos = Math.floor(Math.random()*CANVAS_WIDTH);
+        var target = Math.floor(Math.random() * 10 + 1);
+        var tar_pos;
+        if (target<6){
+           tar_pos =  target * 40 + 40;
+        } else {
+           tar_pos =  target * 40 + 120; 
+        }
+        this.rockets[next_rocet].start_pos = x_pos;
+        this.rockets[next_rocet].target_pos = tar_pos;
+        this.rockets[next_rocet].current_pos = [x_pos,0];
+    } 
+}
+
+missle_command.Enimy.update = function(){
+    this.rockets.forEach(function(rocket){
+        if (rocket.active == true){
+            rocket.current_pos[1]+=1;
+            var k = (rocket.target_pos - rocket.start_pos)/(CANVAS_HEIGHT - 30);
+            rocket.current_pos[0] = rocket.current_pos[1] * k + rocket.start_pos;
+        }
+    })
+}
+
+missle_command.Enimy.draw = function(){
+  
+
+    this.rockets.forEach(function(rocket){
+          
+        if (rocket.active == true){
+            missle_command.ctx.beginPath();
+            missle_command.ctx.moveTo(rocket.start_pos, 0);
+            missle_command.ctx.lineTo(rocket.current_pos[0], rocket.current_pos[1]);
+            missle_command.ctx.strokeStyle = '#ff0000';
+            missle_command.ctx.stroke();
+            ;
+        }
+    })
+   
 }
 
 
-
-missle_command.start = setInterval(function() {
-  //update();
-  missle_command.draw();
-}, 1000/missle_command.FPS);
+missle_command.start = function(){
+    setInterval(function() {
+        missle_command.update();
+        missle_command.draw();
+        }, 1000/missle_command.FPS);
+}
 
 $(document).ready(function(){
     missle_command.init();
