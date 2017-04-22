@@ -1,6 +1,8 @@
 var missle_command = missle_command || {};
 var CANVAS_WIDTH = 600;
 var CANVAS_HEIGHT = 400;
+var MAX_ROCKETS = 10;
+var MASS_EXPLOSION = 15;
 
 //missle_command.canvas = document.getElementById('canvas'); 
 //missle_command.ctx = canvas.getContext('2d'); 
@@ -21,6 +23,9 @@ missle_command.update = function(){
     missle_command.Enimy.update();
 }
 missle_command.draw = function(){
+    this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    this.ctx.fillStyle = "#000"; 
+    this.ctx.fillRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT); 
     missle_command.Base.draw();
     missle_command.Enimy.draw();
 }
@@ -85,7 +90,8 @@ missle_command.Base.draw = function(){
 missle_command.Enimy = {};
 missle_command.Enimy.init = function(){
     this.rockets = [];
-    this.max_rockets = 10;
+    this.mass_explosion = MASS_EXPLOSION;
+    this.max_rockets = MAX_ROCKETS-1;
     for(var i = 0; i<20; i++){
         this.rockets.push(new missle_command.constructors.rockets());
     }
@@ -121,14 +127,37 @@ missle_command.Enimy.start_rocket = function(){
 }
 
 missle_command.Enimy.update = function(){
-    this.rockets.forEach(function(rocket){
-        if (rocket.active == true){
+    this.rockets.forEach(function(rocket,index,rockets ){
+        if (rocket.active == true && rocket.blow_up == null ){
             rocket.current_pos[1]+=1;
             var k = (rocket.target_pos - rocket.start_pos)/(CANVAS_HEIGHT - 30);
             rocket.current_pos[0] = rocket.current_pos[1] * k + rocket.start_pos;
         }
+        if (rocket.current_pos != null && rocket.current_pos[1] == CANVAS_HEIGHT - 25 ){
+            blow_up(rocket,index,rockets);
+        }
+
     })
+    
+    function blow_up(rocket,index,rockets){
+        rocket.blow_up = true;
+        
+        if (rocket.blow_up_state == null) {
+            rocket.blow_up_state = 0;
+        } else {
+            if (rocket.blow_up_state < missle_command.Enimy.mass_explosion){
+                rocket.blow_up_state++;
+            }else{
+                //alert(rockets.length);
+                rockets.splice(index, 1 /* how much */)
+                //alert(rockets.length);
+            }
+            
+        }
+    }
 }
+
+
 
 missle_command.Enimy.draw = function(){
   
@@ -142,6 +171,17 @@ missle_command.Enimy.draw = function(){
             missle_command.ctx.strokeStyle = '#ff0000';
             missle_command.ctx.stroke();
             ;
+        }
+        if (rocket.blow_up==true){
+              missle_command.ctx.beginPath();
+              missle_command.ctx.arc(rocket.current_pos[0], rocket.current_pos[1], rocket.blow_up_state, 0, 2 * Math.PI, false);
+              missle_command.ctx.fillStyle = '#fff';
+              missle_command.ctx.fill();
+              missle_command.ctx.lineWidth = 1;
+              missle_command.ctx.strokeStyle = '#ff4500';
+              missle_command.ctx.stroke();
+            
+            //alert("Bum " + rocket.blow_up_state)
         }
     })
    
