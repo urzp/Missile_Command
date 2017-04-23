@@ -2,7 +2,7 @@ var missle_command = missle_command || {};
 var CANVAS_WIDTH = 600;
 var CANVAS_HEIGHT = 400;
 var MAX_ROCKETS = 1;
-var MAX_ROCKETS_PLAYER = 1;
+var MAX_ROCKETS_PLAYER = 10;
 var MASS_EXPLOSION = 15;
 var ALL_ENIMY_ROCKETS = 50;
 var ALL_PLAYER_ROCKETS = 100;
@@ -22,7 +22,7 @@ missle_command.init = function(){
         missle_command.Enimy.init();
 }
 missle_command.update = function(){
-    missle_command.Base.start_roket();
+    //missle_command.Base.start_roket();
     missle_command.Base.update();
     missle_command.Enimy.start_rocket();
     missle_command.Enimy.update();
@@ -67,7 +67,7 @@ missle_command.Base.init = function(){
         this.rockets.push(new missle_command.constructors.rockets());
     }
 }
-missle_command.Base.start_roket = function(){  
+missle_command.Base.start_roket = function(tar_x,tar_y){  
     var count_active = 0;
     var next_rocet = null;
     var rocket_count = this.rockets.length;
@@ -83,8 +83,8 @@ missle_command.Base.start_roket = function(){
         this.rockets[next_rocet].active = true;
         var start_pos =  Math.floor(Math.random()*3);
         var x_pos = 0;
-        var tar_xpos = 100//200;
-        var tar_ypos = 200//320;
+        var tar_xpos = tar_x//200;
+        var tar_ypos = tar_y//320;
         switch(start_pos){
             case 0:
                 x_pos =20
@@ -105,11 +105,11 @@ missle_command.Base.start_roket = function(){
 missle_command.Base.update = function(){
         this.rockets.forEach(function(rocket,index,rockets ){
         if (rocket.active == true && rocket.blow_up == null ){
-            rocket.current_pos[1]-=1;
+            rocket.current_pos[1]-=5;
             var k = (rocket.target_pos[0] - rocket.start_pos)/(CANVAS_HEIGHT - 40 - rocket.target_pos[1]);
             rocket.current_pos[0] = (CANVAS_HEIGHT - 40 - rocket.current_pos[1]) * k + rocket.start_pos ;
         }
-        if (rocket.current_pos != null && rocket.current_pos[1] == rocket.target_pos[1] ){
+        if (rocket.current_pos != null && rocket.current_pos[1] <= rocket.target_pos[1] ){
              blow_up(rocket,index,rockets);
         }
         
@@ -296,9 +296,15 @@ missle_command.start = function(){
         }, 1000/missle_command.FPS);
 }
 
+
+
 $(document).ready(function(){
     missle_command.init();
     missle_command.start();
+    document.getElementById('canvas').addEventListener('click', function(event){
+        missle_command.Base.start_roket (event.offsetX,event.offsetY)
+    }, false)
+
 })
 
 
