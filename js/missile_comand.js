@@ -1,7 +1,7 @@
 var missle_command = missle_command || {};
 var CANVAS_WIDTH = 600;
 var CANVAS_HEIGHT = 400;
-var MAX_ROCKETS = 1;
+var MAX_ROCKETS = 10;
 var MAX_ROCKETS_PLAYER = 10;
 var MASS_EXPLOSION = 15;
 var ALL_ENIMY_ROCKETS = 50;
@@ -105,7 +105,7 @@ missle_command.Base.start_roket = function(tar_x,tar_y){
 missle_command.Base.update = function(){
         this.rockets.forEach(function(rocket,index,rockets ){
         if (rocket.active == true && rocket.blow_up == null ){
-            rocket.current_pos[1]-=5;
+            rocket.current_pos[1]-=10;
             var k = (rocket.target_pos[0] - rocket.start_pos)/(CANVAS_HEIGHT - 40 - rocket.target_pos[1]);
             rocket.current_pos[0] = (CANVAS_HEIGHT - 40 - rocket.current_pos[1]) * k + rocket.start_pos ;
         }
@@ -232,10 +232,30 @@ missle_command.Enimy.update = function(){
             var k = (rocket.target_pos - rocket.start_pos)/(CANVAS_HEIGHT - 30);
             rocket.current_pos[0] = rocket.current_pos[1] * k + rocket.start_pos;
         }
+        
+        missle_command.Base.rockets.forEach(function(player_rocket){
+            if (player_rocket.blow_up_state == 0){
+                x = player_rocket.current_pos[0];
+                y = player_rocket.current_pos[1];
+                if (rocket.current_pos[0] <= x +  MASS_EXPLOSION && rocket.current_pos[0] >= x -  MASS_EXPLOSION ) {
+                    if (rocket.current_pos[1] <= y +  MASS_EXPLOSION && rocket.current_pos[1] >= y -  MASS_EXPLOSION ){
+                        rocket.blow_up = true;
+                    }
+                    
+                }
+                    
+            }
+        })
+        
+        if (rocket.blow_up == true){
+            blow_up(rocket,index,rockets);
+        }
+        
         if (rocket.current_pos != null && rocket.current_pos[1] == CANVAS_HEIGHT - 25 ){
             blow_up(rocket,index,rockets);
             Destroy_target(rocket);
         }
+        
         
     })
     
