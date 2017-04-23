@@ -3,6 +3,8 @@ var CANVAS_WIDTH = 600;
 var CANVAS_HEIGHT = 400;
 var MAX_ROCKETS = 10;
 var MASS_EXPLOSION = 15;
+var ALL_ENIMY_ROCKETS = 50;
+var ALL_PLAYER_ROCKETS = 100;
 
 //missle_command.canvas = document.getElementById('canvas'); 
 //missle_command.ctx = canvas.getContext('2d'); 
@@ -92,7 +94,7 @@ missle_command.Enimy.init = function(){
     this.rockets = [];
     this.mass_explosion = MASS_EXPLOSION;
     this.max_rockets = MAX_ROCKETS-1;
-    for(var i = 0; i<20; i++){
+    for(var i = 0; i<ALL_ENIMY_ROCKETS; i++){
         this.rockets.push(new missle_command.constructors.rockets());
     }
     
@@ -114,6 +116,7 @@ missle_command.Enimy.start_rocket = function(){
         this.rockets[next_rocet].active = true;
         var x_pos = Math.floor(Math.random()*CANVAS_WIDTH);
         var target = Math.floor(Math.random() * 10 + 1);
+        this.rockets[next_rocet].target = target;
         var tar_pos;
         if (target<6){
            tar_pos =  target * 40 + 40;
@@ -135,8 +138,9 @@ missle_command.Enimy.update = function(){
         }
         if (rocket.current_pos != null && rocket.current_pos[1] == CANVAS_HEIGHT - 25 ){
             blow_up(rocket,index,rockets);
+            Destroy_target(rocket);
         }
-
+        
     })
     
     function blow_up(rocket,index,rockets){
@@ -148,13 +152,23 @@ missle_command.Enimy.update = function(){
             if (rocket.blow_up_state < missle_command.Enimy.mass_explosion){
                 rocket.blow_up_state++;
             }else{
-                //alert(rockets.length);
-                rockets.splice(index, 1 /* how much */)
-                //alert(rockets.length);
+                rockets.splice(index, 1)
             }
             
         }
     }
+    
+    function Destroy_target(rocket){
+       if (rocket.current_pos[1] >= CANVAS_HEIGHT - 25 && rocket.blow_up_state == missle_command.Enimy.mass_explosion){
+           missle_command.Base.sub_points.forEach(function(sub_point,index,sub_points){
+               if  (rocket.target == sub_point.position){
+                   sub_points.splice(index, 1)
+               }
+           }) 
+           }
+           
+    }
+    
 }
 
 
