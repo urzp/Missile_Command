@@ -1,7 +1,8 @@
 var missle_command = missle_command || {};
 var CANVAS_WIDTH = 600;
 var CANVAS_HEIGHT = 400;
-var MAX_ROCKETS = 10;
+var MAX_ROCKETS = 1;
+var MAX_ROCKETS_PLAYER = 1;
 var MASS_EXPLOSION = 15;
 var ALL_ENIMY_ROCKETS = 50;
 var ALL_PLAYER_ROCKETS = 100;
@@ -21,6 +22,8 @@ missle_command.init = function(){
         missle_command.Enimy.init();
 }
 missle_command.update = function(){
+    missle_command.Base.start_roket();
+    missle_command.Base.update();
     missle_command.Enimy.start_rocket();
     missle_command.Enimy.update();
 }
@@ -31,6 +34,9 @@ missle_command.draw = function(){
     missle_command.Base.draw();
     missle_command.Enimy.draw();
 }
+/*=============================================================================
+                            OBJECTS CONSTRUCTORS
+=============================================================================*/  
 missle_command.constructors ={}
 missle_command.constructors.start_point = function(position){
     this.position = position;
@@ -43,7 +49,9 @@ missle_command.constructors.sub_point = function(position){
 missle_command.constructors.rockets = function(){
     this.active = false;
 }
-
+/*=============================================================================
+                            BASE
+=============================================================================*/                           
 missle_command.Base = {};
 missle_command.Base.init = function(){
     this.start_points =[];
@@ -54,6 +62,74 @@ missle_command.Base.init = function(){
     for(var i=1; i<11; i++ ){
         this.sub_points.push(new missle_command.constructors.sub_point(i));
     }
+    this.rockets = [];
+    for(var i=1; i<ALL_PLAYER_ROCKETS; i++ ){
+        this.rockets.push(new missle_command.constructors.rockets());
+    }
+}
+missle_command.Base.start_roket = function(){  
+    var count_active = 0;
+    var next_rocet = null;
+    var rocket_count = this.rockets.length;
+    for (var index = 0; (next_rocet == null && index < rocket_count ); index++ ){
+       if (this.rockets[index].active==true){
+            count_active++;
+        } else {
+           next_rocet = index;   
+        }
+    }
+    
+    if (count_active <= MAX_ROCKETS_PLAYER){
+        this.rockets[next_rocet].active = true;
+        var start_pos =  Math.floor(Math.random()*3);
+        var x_pos = 0;
+        var tar_xpos = 100//200;
+        var tar_ypos = 200//320;
+        switch(start_pos){
+            case 0:
+                x_pos =20
+                break
+            case 1:
+                 x_pos =CANVAS_WIDTH/2 
+                break
+           case 2:
+                 x_pos =CANVAS_WIDTH - 20
+                break
+                        }
+        this.rockets[next_rocet].start_pos = x_pos;
+        this.rockets[next_rocet].target_pos = [tar_xpos, tar_ypos];
+        this.rockets[next_rocet].current_pos = [x_pos,CANVAS_HEIGHT - 40];
+    }  
+}
+
+missle_command.Base.update = function(){
+        this.rockets.forEach(function(rocket,index,rockets ){
+        if (rocket.active == true && rocket.blow_up == null ){
+            rocket.current_pos[1]-=1;
+            var k = (rocket.target_pos[0] - rocket.start_pos)/(CANVAS_HEIGHT - 40 - rocket.target_pos[1]);
+            rocket.current_pos[0] = (CANVAS_HEIGHT - 40 - rocket.current_pos[1]) * k + rocket.start_pos ;
+        }
+        if (rocket.current_pos != null && rocket.current_pos[1] == rocket.target_pos[1] ){
+             blow_up(rocket,index,rockets);
+        }
+        
+        function blow_up(rocket,index,rockets){
+        rocket.blow_up = true;
+        
+        if (rocket.blow_up_state == null) {
+            rocket.blow_up_state = 0;
+        } else {
+            if (rocket.blow_up_state < missle_command.Enimy.mass_explosion){
+                rocket.blow_up_state++;
+            }else{
+                rockets.splice(index, 1)
+            }
+            
+        }
+    }
+        
+        
+    })
 }
 missle_command.Base.draw = function(){
     missle_command.ctx.fillStyle = "#254b09"; 
@@ -87,8 +163,29 @@ missle_command.Base.draw = function(){
             missle_command.ctx.fillRect(x_pos,CANVAS_HEIGHT-30,20,10);
         }
     })
+    missle_command.Base.rockets.forEach(function(rocket){
+        if (rocket.active == true){
+            missle_command.ctx.beginPath();
+            missle_command.ctx.moveTo(rocket.start_pos, CANVAS_HEIGHT - 40);
+            missle_command.ctx.lineTo(rocket.current_pos[0], rocket.current_pos[1]);
+            missle_command.ctx.strokeStyle = '#c7b73a';
+            missle_command.ctx.stroke();
+        }
+        if (rocket.blow_up==true){
+              missle_command.ctx.beginPath();
+              missle_command.ctx.arc(rocket.current_pos[0], rocket.current_pos[1], rocket.blow_up_state, 0, 2 * Math.PI, false);
+              missle_command.ctx.fillStyle = '#fff';
+              missle_command.ctx.fill();
+              missle_command.ctx.lineWidth = 1;
+              missle_command.ctx.strokeStyle = '#ff4500';
+              missle_command.ctx.stroke();
+        }
+    }) 
+    
 }
-
+/*=============================================================================
+                            ENIMY   
+=============================================================================*/  
 missle_command.Enimy = {};
 missle_command.Enimy.init = function(){
     this.rockets = [];
@@ -128,7 +225,6 @@ missle_command.Enimy.start_rocket = function(){
         this.rockets[next_rocet].current_pos = [x_pos,0];
     } 
 }
-
 missle_command.Enimy.update = function(){
     this.rockets.forEach(function(rocket,index,rockets ){
         if (rocket.active == true && rocket.blow_up == null ){
@@ -170,21 +266,14 @@ missle_command.Enimy.update = function(){
     }
     
 }
-
-
-
 missle_command.Enimy.draw = function(){
-  
-
     this.rockets.forEach(function(rocket){
-          
         if (rocket.active == true){
             missle_command.ctx.beginPath();
             missle_command.ctx.moveTo(rocket.start_pos, 0);
             missle_command.ctx.lineTo(rocket.current_pos[0], rocket.current_pos[1]);
             missle_command.ctx.strokeStyle = '#ff0000';
             missle_command.ctx.stroke();
-            ;
         }
         if (rocket.blow_up==true){
               missle_command.ctx.beginPath();
@@ -194,14 +283,12 @@ missle_command.Enimy.draw = function(){
               missle_command.ctx.lineWidth = 1;
               missle_command.ctx.strokeStyle = '#ff4500';
               missle_command.ctx.stroke();
-            
-            //alert("Bum " + rocket.blow_up_state)
         }
     })
-   
 }
-
-
+/*=============================================================================
+                            OTHER  
+=============================================================================*/  
 missle_command.start = function(){
     setInterval(function() {
         missle_command.update();
